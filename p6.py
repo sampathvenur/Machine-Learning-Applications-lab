@@ -1,32 +1,36 @@
 import pandas as pd
+import math
 
-# Calculate probabilities
-def train(data, target):
-    classes = data[target].unique()
-    probs = {cls: len(data[data[target] == cls]) / len(data) for cls in classes}
-    attr_probs = {
-        col: {
-            val: {
-                cls: len(data[(data[col] == val) & (data[target] == cls)]) / len(data[data[target] == cls])
-                for cls in classes
-            }
-            for val in data[col].unique()
-        }
-        for col in data.columns[:-1]
-    }
-    return probs, attr_probs
+data = pd.read_csv('./Data/Heart_Disease.csv')
 
-# Predict classes
-def predict(example, probs, attr_probs):
-    predictions = {
-        cls: probs[cls] * 
-        prod(attr_probs[col][val][cls] for col, val in zip(example.index, example))
-        for cls in probs
-    }
-    return max(predictions, key=predictions.get)
+P_A = data['CHDRisk'].value_counts(normalize=True).to_dict()
+print("P(A) :", P_A)
 
-# Main execution
-df = pd.read_csv('./Data/Tennis.csv')
-class_probs, attr_probs = train(df, 'Play')
-example = df.iloc[0, :-1]  # Test with the first row
-print("Prediction:", predict(example, class_probs, attr_probs))
+P_X_A = {col: data.groupby([col, 'CHDRisk']).size().unstack().apply(lambda x: x/x.sum(), axis=1).to_dict() for col in data.columns[:-1]}
+print("P(X/A) :", P_X_A)
+
+P_X = {col: data[col].value_counts(normalize=True).to_dict() for col in data.columns[:-1]}
+print("P(X) :", P_X)
+
+def naive_bayes_predict(row):
+    probs = {c: math.log(P_A[c]) for c in P_A}
+    
+    for col in data.columns[:-1]:
+        for val in P_X_A[col]:
+            if row[col] == val:
+                for c in P_A:
+                    probs[c] += math.log(P_X_A[col].get(val, {}).get(c, 1e-6))
+
+    return max(probs, key=probs.get)
+
+misclassified = 0
+total = len(data)
+for _, row in data.iterrows():
+    predicted = naive_bayes_predict(row)
+    if predicted != row['CHDRisk']:
+        misclassified += 1
+
+accuracy = (total - misclassified) / total * 100
+print(f'Misclassification Count={misclassified}')
+print(f'Misclassification Rate={misclassified/total*100}%')
+print(f'Accuracy={accuracy}%')

@@ -1,22 +1,24 @@
 import numpy as np
 
-X = np.array([[2, 9], [1, 5], [3, 6]], dtype=float) / np.amax([[2, 9], [1, 5], [3, 6]], axis=0)
-y = np.array([[92], [86], [89]], dtype=float) / 100
+def sigmoid(x): return 1 / (1 + np.exp(-x))
+def sigmoid_derivative(x): return x * (1 - x)
 
-sigmoid = lambda x: 1 / (1 + np.exp(-x))
-d_sigmoid = lambda x: x * (1 - x)
+X = np.array([[0.66666667], [0.33333333], [1.0]])
+y = np.array([[0.92], [0.86], [0.89]])
 
-wh, bh = np.random.uniform(size=(2, 3)), np.random.uniform(size=(1, 3))
-wo, bo = np.random.uniform(size=(3, 1)), np.random.uniform(size=(1, 1))
+weights = np.random.rand(1, 1)
+bias = np.random.rand(1)
 
-for _ in range(1000):
-    h = sigmoid(X @ wh + bh)
-    o = sigmoid(h @ wo + bo)
-    d_o = (y - o) * d_sigmoid(o)
-    d_h = d_o @ wo.T * d_sigmoid(h)
-    wo += h.T @ d_o * 0.6
-    wh += X.T @ d_h * 0.6
+lr = 0.1
 
-print("Input:\n", X)
-print("Actual Output:\n", y)
-print("Predicted Output:\n", o)
+for _ in range(10000):
+    z = np.dot(X, weights) + bias
+    output = sigmoid(z)
+
+    error = y - output
+    d_output = error * sigmoid_derivative(output)
+    weights += np.dot(X.T, d_output) * lr
+    bias += np.sum(d_output) * lr
+
+print(f"Actual Output:\n{y}")
+print(f"Predicted Output:\n{output}")

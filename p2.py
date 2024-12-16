@@ -1,38 +1,23 @@
-import numpy as np
-import pandas as pd
-data=pd.DataFrame(data=pd.read_csv('./Data/enjoysports - Sheet1.csv',header=None))
-concepts=np.array(data.iloc[:,0:-1])
-print(concepts)
-target=np.array(data.iloc[:,-1])
-print(target)
+import numpy as np, csv
 
-def learn(concepts,target):
-    specific_h=concepts[0].copy()
-    print("initialisation of speccific_h and general_h")
-    print(specific_h)
-    general_h=[["?" for i in range (len(specific_h))] for i in range (len(specific_h))]
-    print(general_h)
-    for i, h in enumerate(concepts):
-        if target[i]=="yes":
-            for x in range (len(specific_h)):
-                if h[x]!=specific_h[x]:
-                    specific_h[x]='?'
-                    general_h[x][x]='?'
-                print(specific_h)
-        print(specific_h)
-        if target[i]=="no":
-            for x in range (len(specific_h)):
-                if h[x]!=specific_h[x]:
-                    general_h[x][x]=specific_h[x]
-                else:
-                    general_h[x][x]='?'
-        print("steps of candidate elimination alhorithm",i+1)
-        print(specific_h)
-        print(general_h)
-    indices=[i for i, val in enumerate(general_h) if val== ['?','?','?','?','?','?']]
-    for i in indices:
-        general_h.remove(['?','?','?','?','?','?'])
-    return specific_h,general_h
-s_final, g_final=learn(concepts,target)
-print("final specific_h:",s_final,sep="\n")
-print("final general_h:",g_final,sep="\n")
+data = np.array(list(csv.reader(open('./Data/enjoysports.csv'))))
+concepts, target = data[:, :-1], data[:, -1]
+
+s_h = list(concepts[0])
+g_h = [['?' for _ in s_h] for _ in s_h]
+
+for i, val in enumerate(concepts):
+    if target[i] == "yes":
+        s_h = ['?' if s_h[x] != val[x] else s_h[x] for x in range(len(s_h))]
+        g_h = [g for g in g_h if not any(g[x] != '?' and g[x] != val[x] for x in range(len(s_h)))]
+    else:
+        for x in range(len(s_h)):
+            if s_h[x] != val[x]:
+                g_h[x][x] = s_h[x]
+
+g_h = [g for g in g_h if g != ['?' for _ in s_h]]
+
+print("Concepts:\n", concepts)
+print("Target:\n", target)
+print("Final Specific_h:\n", np.array(s_h))
+print("Final General_h:\n", [list(map(str, h)) for h in g_h])

@@ -1,27 +1,41 @@
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import accuracy_score, confusion_matrix
-from sklearn.preprocessing import LabelEncoder
-import matplotlib.pyplot as plt
+from sklearn import metrics
 import seaborn as sns
+import matplotlib.pyplot as plt
 
-# Load data and encode
-df = pd.read_csv("./Data/Heart_Disease (1).csv")
-X = df.drop(columns=['CHDRisk'])
-y = LabelEncoder().fit_transform(df['CHDRisk'])
-X = X.apply(LabelEncoder().fit_transform)
+data = pd.read_csv('./Data/Heart_Disease.csv')
 
-# Train-test split
+data_encoded = pd.get_dummies(data.drop(columns=['CHDRisk']), drop_first=True)
+
+X = data_encoded
+y = data['CHDRisk'].map({'no': 0, 'yes': 1})
+
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Model training and prediction
-clf = GaussianNB()
-clf.fit(X_train, y_train)
-y_pred = clf.predict(X_test)
+print(f"Total number of Training Data: {X_train.shape}")
+print(f"Total number of Test Data: {X_test.shape}")
 
-# Metrics and confusion matrix
-print("Accuracy:", accuracy_score(y_test, y_pred))
-cm = confusion_matrix(y_test, y_pred)
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=['No', 'Yes'], yticklabels=['No', 'Yes'])
+model = GaussianNB()
+model.fit(X_train, y_train)
+
+predicted = model.predict(X_test)
+
+accuracy = metrics.accuracy_score(y_test, predicted)
+print(f"Accuracy of the classifier: {accuracy}")
+
+conf_matrix = metrics.confusion_matrix(y_test, predicted)
+
+print("Confusion Matrix:")
+print(conf_matrix)
+
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['No Disease', 'Heart Disease'],
+            yticklabels=['No Disease', 'Heart Disease'])
+plt.title('Confusion Matrix')
+plt.ylabel('Actual')
+plt.xlabel('Predicted')
 plt.show()
+
+print(f"Predicted Value for individual Test Data: {predicted[0]}")

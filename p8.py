@@ -2,25 +2,22 @@ from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn import datasets
 
-# Load dataset
-data = datasets.load_iris()
-X = data.data  # Features
-y = data.target  # Target labels
+iris = datasets.load_iris()
+print("Iris Data set loaded...")
 
-# Split dataset into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+x_train, x_test, y_train, y_test = train_test_split(iris.data, iris.target, test_size=0.1)
 
-# Create and train the KNN classifier
-knn = KNeighborsClassifier(n_neighbors=3)
-knn.fit(X_train, y_train)
+for i in range(len(iris.target_names)):
+    print("Label", i, "-", str(iris.target_names[i]))
 
-# Test the classifier
-accuracy = knn.score(X_test, y_test)
+classifier = KNeighborsClassifier(n_neighbors=2)
 
-# Print accuracy
-print(f'Accuracy: {accuracy * 100:.2f}%')
+classifier.fit(x_train, y_train)
 
-# Make a prediction
-sample = [X_test[0]]  # First test sample
-prediction = knn.predict(sample)
-print(f'Predicted Label for Sample: {prediction[0]}')
+y_pred = classifier.predict(x_test)
+
+print("\nResults of Classification using K-nn with K=2")
+for r in range(0, len(x_test)):
+    print(f"Sample: {x_test[r]} Actual-label: {y_test[r]} Predicted-label: {y_pred[r]}")
+
+print("\nClassification Accuracy:", classifier.score(x_test, y_test))
